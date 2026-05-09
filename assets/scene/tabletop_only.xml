@@ -1,0 +1,64 @@
+<mujoco model="tabletop_only">
+  <!-- Tabletop scene WITHOUT the robot.
+       Used for verifying the table layout and YCB objects in isolation
+       before we combine with the robot. The full scene is in full_scene.xml.
+       
+       NOTE: meshdir matches full_scene.xml so the YCB fragment paths work
+       identically in both scenes. -->
+
+  <!-- Compiler: no meshdir. YCB fragment's mesh paths are file-relative
+       (../mounted/meshes/ycb/...) so they resolve correctly without an explicit meshdir. -->
+  <compiler angle="radian"/>
+  <option integrator="implicitfast" cone="elliptic" impratio="10"/>
+
+  <statistic center="0.4 0 0.5" extent="0.8" meansize="0.05"/>
+
+  <visual>
+    <headlight ambient="0.4 0.4 0.4" diffuse="0.6 0.6 0.6" specular="0.2 0.2 0.2"/>
+    <global azimuth="120" elevation="-20"/>
+    <quality shadowsize="4096"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge"
+             rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8"
+             width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true"
+              texrepeat="5 5" reflectance="0.2"/>
+    <material name="table_top" rgba="0.55 0.40 0.28 1.0"/>      <!-- warm wood -->
+    <material name="table_leg" rgba="0.30 0.20 0.15 1.0"/>      <!-- darker wood -->
+  </asset>
+
+  <worldbody>
+    <light name="top"  pos="0.5 0  1.6" dir="0 0 -1" diffuse="0.7 0.7 0.7"/>
+    <light name="left" pos="0.5 0.8 1.0" dir="0 -0.5 -1" diffuse="0.4 0.4 0.4"/>
+    <geom name="floor" type="plane" size="2 2 0.05" material="groundplane"/>
+
+    <!-- ============== TABLE ==============
+         Table at world (+0.5, 0, 0), 60cm deep (X) x 80cm wide (Y), top at z=0.7m.
+         Built as a single static body with a tabletop slab and 4 legs.
+         contype=1, conaffinity=3: collides with the arm (1) AND the hand (2). -->
+    <body name="table" pos="0.5 0 0">
+      <!-- Tabletop: 60cm deep (X), 80cm wide (Y), 4cm thick -->
+      <geom name="table_top" type="box" size="0.30 0.40 0.02"
+            pos="0 0 0.68" material="table_top"
+            contype="1" conaffinity="3" friction="1.0 0.05 0.001"/>
+      <!-- 4 legs, each a thin rectangular pillar from floor to underside of top -->
+      <geom name="table_leg_1" type="box" size="0.02 0.02 0.33"
+            pos="-0.28 -0.38 0.33" material="table_leg" contype="1" conaffinity="3"/>
+      <geom name="table_leg_2" type="box" size="0.02 0.02 0.33"
+            pos="-0.28  0.38 0.33" material="table_leg" contype="1" conaffinity="3"/>
+      <geom name="table_leg_3" type="box" size="0.02 0.02 0.33"
+            pos=" 0.28 -0.38 0.33" material="table_leg" contype="1" conaffinity="3"/>
+      <geom name="table_leg_4" type="box" size="0.02 0.02 0.33"
+            pos=" 0.28  0.38 0.33" material="table_leg" contype="1" conaffinity="3"/>
+    </body>
+
+    <!-- ============== YCB OBJECTS ============== -->
+    <!-- Included from the auto-generated fragment. Re-run
+         scripts/build_objects_fragment.py to regenerate after layout changes. -->
+  </worldbody>
+
+  <include file="ycb_objects.xml"/>
+</mujoco>

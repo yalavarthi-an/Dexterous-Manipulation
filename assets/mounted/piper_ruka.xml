@@ -1,0 +1,671 @@
+<mujoco model="piper_ruka">
+  <!-- ============================================================================
+       PIPER ARM + RUKA HAND — UNIFIED MJCF
+       ============================================================================
+       Convention: Z-up (MuJoCo default). Gravity NOT overridden (default 0 0 -9.81).
+       
+       Mount transform (link6 → ruka_palm):
+         pos  = "0 0 0.10"          →  10 cm forward of link6 origin along link6 +Z
+                                       Empirically tuned: smaller values (0.05–0.06)
+                                       caused the back-flange of the RUKA palm STL to
+                                       penetrate link6's wrist housing. 0.10 leaves a
+                                       small visible gap representing a notional wrist
+                                       adapter plate.
+         quat = "0 0.707 0.707 0"   →  180° rotation around the diagonal axis (1,1,0)/√2
+                                       expressed in link6's frame.
+                                       Effect on RUKA's frame:
+                                         RUKA +X (thumb side) → link6 +Y
+                                         RUKA +Y (palm-out)   → link6 +X
+                                         RUKA −Z (fingers)    → link6 +Z   ← tool axis
+
+                                       The (1,1,0) rotation simultaneously aligns the
+                                       finger axis with the tool axis AND places the thumb
+                                       in link6 +Y. The 4-finger fan ends up in the +X/+Z
+                                       plane of link6. Result: at the Piper home pose
+                                       (joint2=1.57, joint3=-1.3485) the hand presents the
+                                       palm "out" toward the workspace and the thumb "up"
+                                       in world coordinates — natural for visualisation
+                                       and reachable across the full grasp space via
+                                       joint5/joint6 wrist articulation.
+
+         An equivalent simpler quat would be "0 1 0 0" (180° around X), which also aligns
+         fingers with the tool axis but rotates the palm 90° around that axis vs. the
+         current choice. Both are kinematically valid; we picked (1,1,0) for the
+         human-intuitive home pose where the palm naturally faces the workspace
+         (toward the floor / table) at Piper's default joint angles.
+
+       What was deleted from the original Piper MJCF:
+         - <body name="link7"> ... gripper finger 1
+         - <body name="link8"> ... gripper finger 2
+         - <equality> ... </equality> (coupled the two gripper fingers)
+         - <position name="gripper" .../> actuator
+         - <light spotlight target="link8" .../> (retargeted in scene file)
+
+       What was deleted from the original RUKA MJCF:
+         - <option gravity="0 -9.81 0"/> (Y-up — would break Piper)
+         - <body name="world_frame"> wrapper (we re-parent to link6)
+         - <joint name="Palm_Joint" type="slide" .../> (degenerate, unused)
+
+       Renaming policy: all RUKA bodies / joints / geoms / actuators are prefixed
+       with "ruka_" to avoid name collision with Piper and to make ownership obvious.
+       ============================================================================ -->
+
+  <compiler angle="radian" autolimits="true"/>
+  <option integrator="implicitfast" cone="elliptic" impratio="10"/>
+
+  <default>
+    <!-- ============== Piper class (unchanged from Menagerie) ============== -->
+    <default class="piper">
+      <joint frictionloss="0.3" armature="0.005"/>
+      <position inheritrange="1" forcerange="-100 100"/>
+      <default class="piper_visual">
+        <geom group="2" type="mesh" contype="0" conaffinity="0" density="0"/>
+      </default>
+      <default class="piper_collision">
+        <geom group="3" type="capsule"/>
+      </default>
+    </default>
+
+    <!-- ============== RUKA class (renamed to avoid collisions) ============== -->
+    <default class="ruka">
+      <default class="ruka_visual">
+        <geom friction="1 0.005 0.001" conaffinity="0" contype="0" condim="3" group="2"/>
+      </default>
+      <default class="ruka_joint">
+        <joint damping="0.05" armature="0.001" frictionloss="0.01"/>
+      </default>
+      <default class="ruka_collision">
+        <geom group="3" friction="1.5 0.01 0.001" conaffinity="2" contype="2"
+              condim="3" rgba="0 0.5 0.5 0.3" density="0" margin="0.001"/>
+      </default>
+    </default>
+  </default>
+
+  <asset>
+    <!-- ====================== Materials ====================== -->
+    <material name="gray_mat" rgba="0.59 0.59 0.59 1"/>
+    <material name="light_gray_mat" rgba="0.98 0.98 0.98 1"/>
+    <material name="light_medium_gray_mat" rgba="0.85 0.85 0.85 1"/>
+    <material name="dark_gray_mat" rgba="0.086 0.086 0.086 1"/>
+    <material name="darker_gray_mat" rgba="0.14 0.14 0.14 1"/>
+    <material name="white_mat" rgba="1 1 1 1"/>
+    <material name="red_mat" rgba="0.82 0.15 0.15 1"/>
+    <material name="black_mat" rgba="0 0 0 1"/>
+    <material name="ruka_mat" rgba="0.439 0.475 0.502 1"/>
+
+    <!-- ====================== Piper meshes (visual decomposition) ====================== -->
+    <!-- link2: 32 visual sub-meshes -->
+    <mesh file="meshes/piper/link2_0.obj"/>
+    <mesh file="meshes/piper/link2_1.obj"/>
+    <mesh file="meshes/piper/link2_2.obj"/>
+    <mesh file="meshes/piper/link2_3.obj"/>
+    <mesh file="meshes/piper/link2_4.obj"/>
+    <mesh file="meshes/piper/link2_5.obj"/>
+    <mesh file="meshes/piper/link2_6.obj"/>
+    <mesh file="meshes/piper/link2_7.obj"/>
+    <mesh file="meshes/piper/link2_8.obj"/>
+    <mesh file="meshes/piper/link2_9.obj"/>
+    <mesh file="meshes/piper/link2_10.obj"/>
+    <mesh file="meshes/piper/link2_11.obj"/>
+    <mesh file="meshes/piper/link2_12.obj"/>
+    <mesh file="meshes/piper/link2_13.obj"/>
+    <mesh file="meshes/piper/link2_14.obj"/>
+    <mesh file="meshes/piper/link2_15.obj"/>
+    <mesh file="meshes/piper/link2_16.obj"/>
+    <mesh file="meshes/piper/link2_17.obj"/>
+    <mesh file="meshes/piper/link2_18.obj"/>
+    <mesh file="meshes/piper/link2_19.obj"/>
+    <mesh file="meshes/piper/link2_20.obj"/>
+    <mesh file="meshes/piper/link2_21.obj"/>
+    <mesh file="meshes/piper/link2_22.obj"/>
+    <mesh file="meshes/piper/link2_23.obj"/>
+    <mesh file="meshes/piper/link2_24.obj"/>
+    <mesh file="meshes/piper/link2_25.obj"/>
+    <mesh file="meshes/piper/link2_26.obj"/>
+    <mesh file="meshes/piper/link2_27.obj"/>
+    <mesh file="meshes/piper/link2_28.obj"/>
+    <mesh file="meshes/piper/link2_29.obj"/>
+    <mesh file="meshes/piper/link2_30.obj"/>
+    <mesh file="meshes/piper/link2_31.obj"/>
+    <!-- link3: 28 visual sub-meshes (note: link3_6 missing in original) -->
+    <mesh file="meshes/piper/link3_0.obj"/>
+    <mesh file="meshes/piper/link3_1.obj"/>
+    <mesh file="meshes/piper/link3_2.obj"/>
+    <mesh file="meshes/piper/link3_3.obj"/>
+    <mesh file="meshes/piper/link3_4.obj"/>
+    <mesh file="meshes/piper/link3_5.obj"/>
+    <mesh file="meshes/piper/link3_7.obj"/>
+    <mesh file="meshes/piper/link3_8.obj"/>
+    <mesh file="meshes/piper/link3_9.obj"/>
+    <mesh file="meshes/piper/link3_10.obj"/>
+    <mesh file="meshes/piper/link3_11.obj"/>
+    <mesh file="meshes/piper/link3_12.obj"/>
+    <mesh file="meshes/piper/link3_13.obj"/>
+    <mesh file="meshes/piper/link3_14.obj"/>
+    <mesh file="meshes/piper/link3_15.obj"/>
+    <mesh file="meshes/piper/link3_16.obj"/>
+    <mesh file="meshes/piper/link3_17.obj"/>
+    <mesh file="meshes/piper/link3_18.obj"/>
+    <mesh file="meshes/piper/link3_19.obj"/>
+    <mesh file="meshes/piper/link3_20.obj"/>
+    <mesh file="meshes/piper/link3_21.obj"/>
+    <mesh file="meshes/piper/link3_22.obj"/>
+    <mesh file="meshes/piper/link3_23.obj"/>
+    <mesh file="meshes/piper/link3_24.obj"/>
+    <mesh file="meshes/piper/link3_25.obj"/>
+    <mesh file="meshes/piper/link3_26.obj"/>
+    <mesh file="meshes/piper/link3_27.obj"/>
+    <mesh file="meshes/piper/link3_28.obj"/>
+    <!-- link4: 5 visual sub-meshes -->
+    <mesh file="meshes/piper/link4_2.obj"/>
+    <mesh file="meshes/piper/link4_3.obj"/>
+    <mesh file="meshes/piper/link4_4.obj"/>
+    <mesh file="meshes/piper/link4_5.obj"/>
+    <mesh file="meshes/piper/link4_6.obj"/>
+    <!-- link5: 7 visual sub-meshes -->
+    <mesh file="meshes/piper/link5_2.obj"/>
+    <mesh file="meshes/piper/link5_3.obj"/>
+    <mesh file="meshes/piper/link5_4.obj"/>
+    <mesh file="meshes/piper/link5_5.obj"/>
+    <mesh file="meshes/piper/link5_6.obj"/>
+    <mesh file="meshes/piper/link5_7.obj"/>
+    <mesh file="meshes/piper/link5_8.obj"/>
+    <!-- Single-piece collision STLs -->
+    <mesh name="base_link" file="meshes/piper/base_link.stl"/>
+    <mesh name="link1" file="meshes/piper/link1.stl"/>
+    <mesh name="link2" file="meshes/piper/link2.stl"/>
+    <mesh name="link2_gray" file="meshes/piper/link2_gray.stl"/>
+    <mesh name="link3" file="meshes/piper/link3.stl"/>
+    <mesh name="link4" file="meshes/piper/link4.stl"/>
+    <mesh name="link5" file="meshes/piper/link5.stl"/>
+    <mesh file="meshes/piper/link6.stl"/>
+    <!-- link7.stl and link8.stl: present on disk but NOT loaded (gripper deleted) -->
+
+    <!-- ====================== RUKA meshes ====================== -->
+    <mesh name="ruka_Palm"        file="meshes/ruka/Palm.STL"/>
+    <mesh name="ruka_Index_MCP"   file="meshes/ruka/Index_MCP.STL"/>
+    <mesh name="ruka_Index_DIP"   file="meshes/ruka/Index_DIP.STL"/>
+    <mesh name="ruka_Index_PIP"   file="meshes/ruka/Index_PIP.STL"/>
+    <mesh name="ruka_Middle_MCP"  file="meshes/ruka/Middle_MCP.STL"/>
+    <mesh name="ruka_Middle_DIP"  file="meshes/ruka/Middle_DIP.STL"/>
+    <mesh name="ruka_Middle_PIP"  file="meshes/ruka/Middle_PIP.STL"/>
+    <mesh name="ruka_Ring_MCP"    file="meshes/ruka/Ring_MCP.STL"/>
+    <mesh name="ruka_Ring_DIP"    file="meshes/ruka/Ring_DIP.STL"/>
+    <mesh name="ruka_Ring_PIP"    file="meshes/ruka/Ring_PIP.STL"/>
+    <mesh name="ruka_Pinky_MCP"   file="meshes/ruka/Pinky_MCP.STL"/>
+    <mesh name="ruka_Pinky_DIP"   file="meshes/ruka/Pinky_DIP.STL"/>
+    <mesh name="ruka_Pinky_PIP"   file="meshes/ruka/Pinky_PIP.STL"/>
+    <mesh name="ruka_Thumb_MCP"   file="meshes/ruka/Thumb_MCP.STL"/>
+    <mesh name="ruka_Thumb_DIP"   file="meshes/ruka/Thumb_DIP.STL"/>
+    <mesh name="ruka_Thumb_PIP"   file="meshes/ruka/Thumb_PIP.STL"/>
+  </asset>
+
+  <worldbody>
+    <!-- ============================================================================
+         PIPER ARM CHAIN: base_link → link1 → link2 → link3 → link4 → link5 → link6
+         (Verbatim from Menagerie except link7/link8 are dropped at the end of link6.)
+         ============================================================================ -->
+    <body name="base_link" pos="0 0 0.70" childclass="piper" gravcomp="1">
+      <inertial pos="-0.00979275 1.82906e-06 0.04101"
+                quat="0.692988 -0.137524 -0.137826 0.69416" mass="0.162549"
+                diaginertia="0.000269445 0.000227478 0.000221437"/>
+      <geom class="piper_visual" density="0" mesh="base_link" material="gray_mat"/>
+      <geom class="piper_collision" mesh="base_link"/>
+
+      <body name="link1" pos="0 0 0.123" quat="0.707105 0 0 -0.707108" gravcomp="1">
+        <inertial pos="0.00131676 0.000310289 -0.00922875"
+                  quat="0.557105 0.432155 0.377373 0.600388" mass="0.097868"
+                  diaginertia="9.25942e-05 8.3083e-05 7.69469e-05"/>
+        <joint name="joint1" axis="0 0 1" range="-2.618 2.618"/>
+        <geom class="piper_visual" density="0" mesh="link1" material="gray_mat"/>
+        <geom class="piper_collision" mesh="link1"/>
+
+        <body name="link2" quat="0.499998 0.5 -0.500002 -0.5" gravcomp="1">
+          <inertial pos="0.148794 -0.00242027 0.00175155"
+                    quat="-0.0249063 0.70684 0.00803509 0.706889" mass="0.290889"
+                    diaginertia="0.00177549 0.00173142 0.00014552"/>
+          <joint name="joint2" axis="0 0 1" range="0 3.14"/>
+          <geom mesh="link2_0" material="gray_mat" class="piper_visual"/>
+          <geom mesh="link2_1" material="darker_gray_mat" class="piper_visual"/>
+          <geom mesh="link2_2" material="darker_gray_mat" class="piper_visual"/>
+          <geom mesh="link2_3" material="dark_gray_mat" class="piper_visual"/>
+          <geom mesh="link2_4" material="dark_gray_mat" class="piper_visual"/>
+          <geom mesh="link2_5" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_6" material="dark_gray_mat" class="piper_visual"/>
+          <geom mesh="link2_7" material="gray_mat" class="piper_visual"/>
+          <geom mesh="link2_8" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_9" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_10" material="gray_mat" class="piper_visual"/>
+          <geom mesh="link2_11" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_12" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_13" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_14" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_15" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_16" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_17" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_18" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_19" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_20" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_21" material="gray_mat" class="piper_visual"/>
+          <geom mesh="link2_22" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_23" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_24" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_25" material="dark_gray_mat" class="piper_visual"/>
+          <geom mesh="link2_26" material="red_mat" class="piper_visual"/>
+          <geom mesh="link2_27" material="darker_gray_mat" class="piper_visual"/>
+          <geom mesh="link2_28" material="darker_gray_mat" class="piper_visual"/>
+          <geom mesh="link2_29" material="darker_gray_mat" class="piper_visual"/>
+          <geom mesh="link2_30" material="darker_gray_mat" class="piper_visual"/>
+          <geom mesh="link2_31" material="light_medium_gray_mat" class="piper_visual"/>
+          <geom mesh="link2" class="piper_collision"/>
+
+          <body name="link3" pos="0.28358 0.028726 0" quat="0.998726 0 0 0.0504536" gravcomp="1">
+            <inertial pos="-0.0996835 0.0349477 0.000508026"
+                      quat="0.0777021 0.702287 -0.0990541 0.700674" mass="0.290848"
+                      diaginertia="0.000241946 0.000222224 0.000100384"/>
+            <joint name="joint3" pos="0 0 0" axis="0 0 1" range="-2.697 0"/>
+            <geom mesh="link3_0" material="darker_gray_mat" class="piper_visual"/>
+            <geom mesh="link3_1" material="red_mat" class="piper_visual"/>
+            <geom mesh="link3_2" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_3" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_4" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_5" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_7" material="darker_gray_mat" class="piper_visual"/>
+            <geom mesh="link3_8" material="white_mat" class="piper_visual"/>
+            <geom mesh="link3_9" material="red_mat" class="piper_visual"/>
+            <geom mesh="link3_10" material="white_mat" class="piper_visual"/>
+            <geom mesh="link3_11" material="white_mat" class="piper_visual"/>
+            <geom mesh="link3_12" material="white_mat" class="piper_visual"/>
+            <geom mesh="link3_13" material="white_mat" class="piper_visual"/>
+            <geom mesh="link3_14" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_15" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_16" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_17" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_18" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_19" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_20" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_21" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_22" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_23" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_24" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_25" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_26" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_27" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3_28" material="gray_mat" class="piper_visual"/>
+            <geom mesh="link3" class="piper_collision"/>
+
+            <body name="link4" pos="-0.24221 0.068514 0" quat="0.544767 -0.544769 -0.450809 0.450808" gravcomp="1">
+              <inertial pos="0.000276465 -0.00102804 -0.00472831"
+                        quat="0.492305 0.505285 0.503294 0.499017" mass="0.127087"
+                        diaginertia="4.87057e-05 4.10595e-05 3.82001e-05"/>
+              <joint name="joint4" axis="0 0 1" range="-1.832 1.832"/>
+              <geom mesh="link4_2" material="gray_mat" class="piper_visual"/>
+              <geom mesh="link4_3" material="darker_gray_mat" class="piper_visual"/>
+              <geom mesh="link4_4" material="gray_mat" class="piper_visual"/>
+              <geom mesh="link4_5" material="gray_mat" class="piper_visual"/>
+              <geom mesh="link4_6" material="gray_mat" class="piper_visual"/>
+              <geom mesh="link4" class="piper_collision"/>
+
+              <body name="link5" quat="0.707105 0.707108 0 0" gravcomp="1">
+                <inertial pos="8.82262e-05 0.0566829 -0.0019612"
+                          quat="0.507447 0.490986 0.506887 0.494466" mass="0.144711"
+                          diaginertia="0.001 0.001 0.001"/>
+                <joint name="joint5" axis="0 0 1" range="-1.22 1.22"/>
+                <geom mesh="link5_2" material="black_mat" class="piper_visual"/>
+                <geom mesh="link5_3" material="black_mat" class="piper_visual"/>
+                <geom mesh="link5_4" material="darker_gray_mat" class="piper_visual"/>
+                <geom mesh="link5_5" material="gray_mat" class="piper_visual"/>
+                <geom mesh="link5_6" material="light_gray_mat" class="piper_visual"/>
+                <geom mesh="link5_7" material="gray_mat" class="piper_visual"/>
+                <geom mesh="link5_8" material="gray_mat" class="piper_visual"/>
+                <geom mesh="link5" class="piper_collision"/>
+
+                <body name="link6" pos="0 0.091 0.0014165" quat="0 0 -0.707105 -0.707108" gravcomp="1">
+                  <inertial pos="0.0010312 0.0121761 0.0315481"
+                            quat="0.0230402 0.707091 0.0373344 0.70576" mass="1.2"
+                            diaginertia="0.001 0.001 0.001"/>
+                  <joint name="joint6" axis="0 0 1" range="-3.14 3.14"/>
+                  <geom quat="0.707105 0 0 0.707108" mesh="link6" material="gray_mat" class="piper_visual"/>
+                  <geom quat="0.707105 0 0 0.707108" mesh="link6" class="piper_collision"/>
+
+                  <!-- ==========================================================
+                       SITE: tool point at the flange face
+                       Useful as an IK target reference and for visualization.
+                       Marks the "flange origin" — RUKA's mount sits 10cm forward (+Z) of here.
+                       ========================================================== -->
+                  <site name="flange" pos="0 0 0" size="0.005" rgba="0 1 0 1"/>
+
+                  <!-- ==========================================================
+                       SITE: grasp reference point for IK targeting
+                       Position: 18cm along link6 +Z = at the knuckle line
+                                 (middle/ring finger MCP joints). This is
+                                 where contact happens during a grasp —
+                                 a more accurate IK target than the palm
+                                 center (which was at z=0.15).
+                       Frame:    inherits link6's frame (no rotation specified).
+                       Visual:   small magenta sphere for visual debugging.
+                       ========================================================== -->
+                  <site name="palm" pos="0 0 0.18" size="0.008" rgba="1 0 1 1"/>
+
+                  <!-- ==========================================================
+                       MOUNT: RUKA palm attaches as child of link6
+                       pos="0 0 0.10"            →  10cm along link6 +Z
+                                                    Empirically tuned: smaller values
+                                                    (0.05–0.06) caused the back-flange
+                                                    of the RUKA palm STL to penetrate
+                                                    link6's wrist housing. 0.10 leaves
+                                                    a small visible gap representing
+                                                    a notional wrist adapter plate.
+                       quat="0 0.707 0.707 0"    →  180° around (1,1,0)/√2 in link6 frame
+                       After rotation:
+                         - RUKA's −Z (fingers extend) → link6 +Z (approach axis) ✅
+                         - RUKA's +Y (palm-out)        → link6 +X
+                         - RUKA's +X (thumb side)      → link6 +Y
+                       Effect at home pose: palm-out faces world +X (workspace ahead),
+                       thumb points up (world +Z), fingers extend forward.
+                       ========================================================== -->
+                  <body name="ruka_palm" pos="0 0 0.10" quat="0 0.707 0.707 0" childclass="ruka" gravcomp="1">
+                    <!-- Inertial: synthesize a reasonable lumped palm inertia
+                         (RUKA's source uses settotalmass="1" which we are NOT carrying over;
+                         we want explicit physical units in our combined model.) -->
+                    <inertial pos="0 0 -0.04" mass="0.15" diaginertia="0.0002 0.0002 0.0001"/>
+
+                    <geom type="mesh" mesh="ruka_Palm" material="ruka_mat" class="ruka_visual"
+                          name="ruka_palm_visual"/>
+                    <geom type="box" size="0.042 0.0105 0.058" pos="0.004 0.009 -0.02"
+                          class="ruka_collision" name="ruka_palm_collision"/>
+
+                    <!-- (Note: the IK-target site for grasp execution is "palm",
+                         defined inside link6 above — not here. We need its frame
+                         to match link6's frame, but ruka_palm is rotated 180°
+                         from link6 by the mount transform.) -->
+
+                    <!-- ==========================================================
+                         WRIST-MOUNTED CAMERA (eye-in-hand, fixed orientation)
+                         RealSense-D435-like: 640x480, fovy=58°, depth 0.2-2m.
+
+                         Mounted on the back of the palm, looking in the
+                         finger-extension direction (palm -Z). At the home
+                         pose this points roughly forward+slightly-down at
+                         the workspace.
+
+                         The xyaxes encode camera +X (image right) and +Y
+                         (image up) in palm-local coordinates:
+                           +X = (-1, 0, 0)  → image right is palm -X
+                           +Y = (0, -1, 0)  → image up    is palm -Y
+                           camera +Z = X × Y = (0, 0, 1) = palm +Z
+                           camera looks along -Z = palm -Z = finger direction ✓
+
+                         The negative signs (vs the natural (1,0,0)/(0,1,0))
+                         rotate the image 180° around the look axis — without
+                         this rotation the captured image was upside-down. -->
+                    <camera name="wrist_cam"
+                            pos="0 -0.04 0.02"
+                            xyaxes="-1 0 0  0 -1 0"
+                            fovy="58"/>
+
+                    <!-- ===== Index finger ===== -->
+                    <body name="ruka_index_mcp" pos="0.0322 0.0146007 -0.08022"
+                          quat="-0.410779 0.525515 0.556422 0.495469" gravcomp="1">
+                      <inertial pos="0.0288724 -1.28993e-08 0.00378475"
+                                quat="0 0.706065 0 0.708147" mass="0.00327912"
+                                diaginertia="4.20817e-07 3.58574e-07 1.41288e-07"/>
+                      <joint name="ruka_index_mcp_joint" axis="0 1 0" range="0 2.44222" class="ruka_joint"/>
+                      <geom pos="-0.016 0.005 0.0001" type="box" class="ruka_collision"
+                            size="0.015 0.007 0.005" name="ruka_index_mcp_col"/>
+                      <geom pos="-0.046 0.005 -0.003" type="mesh" class="ruka_visual"
+                            material="ruka_mat" mesh="ruka_Index_MCP" name="ruka_index_mcp_vis"/>
+
+                      <body name="ruka_index_dip" pos="-0.035057 0 0.002" quat="0.996195 0 0.0871543 0" gravcomp="1">
+                        <inertial pos="0.000734414 -1.34435e-07 0.00333493"
+                                  quat="0 0.724885 0 0.68887" mass="0.0030053"
+                                  diaginertia="2.77975e-07 2.50136e-07 9.09498e-08"/>
+                        <joint name="ruka_index_dip_joint" axis="0 1 0" range="0 2.09" class="ruka_joint"/>
+                        <geom pos="-0.012 0.005 -0.003" type="mesh" class="ruka_visual"
+                              material="ruka_mat" mesh="ruka_Index_DIP" name="ruka_index_dip_vis"/>
+                        <geom pos="-0.012 0.005 0" type="box" class="ruka_collision"
+                              size="0.017 0.007 0.005" name="ruka_index_dip_col"/>
+
+                        <body name="ruka_index_pip" pos="-0.027 0.0045 0.001" gravcomp="1">
+                          <inertial pos="-0.0274083 1.00211e-07 0.00320314"
+                                    quat="3.68488e-06 0.687097 -3.89655e-06 0.726565" mass="0.00356977"
+                                    diaginertia="3.32817e-07 2.91756e-07 1.1129e-07"/>
+                          <joint name="ruka_index_pip_joint" axis="0 1 0" range="0 2.09" class="ruka_joint"/>
+                          <geom pos="0.013 0.0004 -0.005" type="mesh" class="ruka_visual"
+                                material="ruka_mat" mesh="ruka_Index_PIP" name="ruka_index_pip_vis"/>
+                          <geom pos="-0.015 0.0004 -0.002" type="box" class="ruka_collision"
+                                size="0.0145 0.007 0.005" name="ruka_index_pip_col"/>
+                          <!-- Fingertip site for grasp computations -->
+                          <site name="ruka_index_tip" pos="-0.03 0 0" size="0.003" rgba="1 0 0 0.6"/>
+                        </body>
+                      </body>
+                    </body>
+
+                    <!-- ===== Middle finger ===== -->
+                    <body name="ruka_middle_mcp" pos="0.01518 0.0135414 -0.081"
+                          quat="0.5 -0.5 -0.5 -0.5" gravcomp="1">
+                      <inertial pos="0.0288724 -9.49408e-09 0.00378477"
+                                quat="0 0.706065 0 0.708147" mass="0.00327911"
+                                diaginertia="4.20815e-07 3.58572e-07 1.41288e-07"/>
+                      <joint name="ruka_middle_mcp_joint" axis="0 1 0" range="0 2.44222" class="ruka_joint"/>
+                      <geom pos="-0.046 0 -0.003" type="mesh" class="ruka_visual"
+                            material="ruka_mat" mesh="ruka_Middle_MCP" name="ruka_middle_mcp_vis"/>
+                      <geom pos="-0.016 0 0.0001" type="box" class="ruka_collision"
+                            size="0.017 0.007 0.005" name="ruka_middle_mcp_col"/>
+
+                      <body name="ruka_middle_dip" pos="-0.034 0 0" gravcomp="1">
+                        <inertial pos="0.000734412 -1.31357e-07 0.00333494"
+                                  quat="0 0.724885 0 0.68887" mass="0.0030053"
+                                  diaginertia="2.77975e-07 2.50136e-07 9.09499e-08"/>
+                        <joint name="ruka_middle_dip_joint" axis="0 1 0" range="0 2.09" class="ruka_joint"/>
+                        <geom pos="-0.012 0 -0.003" type="mesh" class="ruka_visual"
+                              material="ruka_mat" mesh="ruka_Middle_DIP" name="ruka_middle_dip_vis"/>
+                        <geom pos="-0.012 0 0" type="box" class="ruka_collision"
+                              size="0.017 0.007 0.005" name="ruka_middle_dip_col"/>
+
+                        <body name="ruka_middle_pip" pos="-0.026 0 0.002" gravcomp="1">
+                          <inertial pos="-0.0274083 9.97469e-08 0.00320314"
+                                    quat="3.35268e-06 0.687097 -3.54527e-06 0.726565" mass="0.00356977"
+                                    diaginertia="3.32817e-07 2.91756e-07 1.1129e-07"/>
+                          <joint name="ruka_middle_pip_joint" axis="0 1 0" range="0 2.09" class="ruka_joint"/>
+                          <geom pos="0.014 0 -0.0045" type="mesh" class="ruka_visual"
+                                material="ruka_mat" mesh="ruka_Middle_PIP" name="ruka_middle_pip_vis"/>
+                          <geom pos="-0.015 0.0004 -0.002" type="box" class="ruka_collision"
+                                size="0.0145 0.007 0.005" name="ruka_middle_pip_col"/>
+                          <site name="ruka_middle_tip" pos="-0.029 0 0" size="0.003" rgba="1 0 0 0.6"/>
+                        </body>
+                      </body>
+                    </body>
+
+                    <!-- ===== Ring finger ===== -->
+                    <body name="ruka_ring_mcp" pos="-0.0088 0.01453 -0.08009"
+                          quat="0.519479 -0.531219 -0.449398 -0.495973" gravcomp="1">
+                      <inertial pos="0.0288724 -7.11557e-09 0.00378476"
+                                quat="0 0.706065 0 0.708147" mass="0.00327912"
+                                diaginertia="4.20817e-07 3.58574e-07 1.41288e-07"/>
+                      <joint name="ruka_ring_mcp_joint" axis="0 1 0" range="0 2.44222" class="ruka_joint"/>
+                      <geom pos="-0.046 0 -0.004" type="mesh" class="ruka_visual"
+                            material="ruka_mat" mesh="ruka_Ring_MCP" name="ruka_ring_mcp_vis"/>
+                      <geom pos="-0.016 0 0.0001" type="box" class="ruka_collision"
+                            size="0.015 0.007 0.005" name="ruka_ring_mcp_col"/>
+
+                      <body name="ruka_ring_dip" pos="-0.036 0 0" gravcomp="1">
+                        <inertial pos="0.000734409 -1.29347e-07 0.00333494"
+                                  quat="0 0.724885 0 0.68887" mass="0.00300529"
+                                  diaginertia="2.77975e-07 2.50136e-07 9.09499e-08"/>
+                        <joint name="ruka_ring_dip_joint" axis="0 1 0" range="0 2.09" class="ruka_joint"/>
+                        <geom pos="-0.01 0 -0.004" type="mesh" class="ruka_visual"
+                              material="ruka_mat" mesh="ruka_Ring_DIP" name="ruka_ring_dip_vis"/>
+                        <geom pos="-0.01 0 0" type="box" class="ruka_collision"
+                              size="0.015 0.007 0.005" name="ruka_ring_dip_col"/>
+
+                        <body name="ruka_ring_pip" pos="-0.025746 0 0" gravcomp="1">
+                          <inertial pos="-0.0274083 1.00945e-07 0.00320315"
+                                    quat="3.216e-06 0.687098 -3.40073e-06 0.726565" mass="0.00356976"
+                                    diaginertia="3.32816e-07 2.91756e-07 1.1129e-07"/>
+                          <joint name="ruka_ring_pip_joint" axis="0 1 0" range="0 2.09" class="ruka_joint"/>
+                          <geom pos="0.015 0 -0.005" type="mesh" class="ruka_visual"
+                                material="ruka_mat" mesh="ruka_Ring_PIP" name="ruka_ring_pip_vis"/>
+                          <geom pos="-0.013 0.0001 -0.0017" type="box" class="ruka_collision"
+                                size="0.014 0.007 0.005" name="ruka_ring_pip_col"/>
+                          <site name="ruka_ring_tip" pos="-0.028 0 0" size="0.003" rgba="1 0 0 0.6"/>
+                        </body>
+                      </body>
+                    </body>
+
+                    <!-- ===== Pinky finger ===== -->
+                    <body name="ruka_pinky_mcp" pos="-0.030617 0.020313 -0.07398"
+                          quat="0.535562 -0.548866 -0.394288 -0.506416" gravcomp="1">
+                      <inertial pos="0.0268917 -2.1328e-08 0.00337657"
+                                quat="2.96624e-06 0.709985 -2.94214e-06 0.704217" mass="0.00308279"
+                                diaginertia="3.86718e-07 3.31476e-07 1.30735e-07"/>
+                      <joint name="ruka_pinky_mcp_joint" axis="0 1 0" range="0 2.44222" class="ruka_joint"/>
+                      <geom pos="-0.042 0 -0.004" type="mesh" class="ruka_visual"
+                            material="ruka_mat" mesh="ruka_Pinky_MCP" name="ruka_pinky_mcp_vis"/>
+                      <geom pos="-0.014 0 0" type="box" class="ruka_collision"
+                            size="0.017 0.007 0.005" name="ruka_pinky_mcp_col"/>
+
+                      <body name="ruka_pinky_dip" pos="-0.032 0 0" quat="0.999904 0 0.0138671 0" gravcomp="1">
+                        <inertial pos="0.000757212 -1.38277e-07 0.00329943"
+                                  quat="0 0.728086 0 0.685486" mass="0.00260945"
+                                  diaginertia="2.12533e-07 1.89485e-07 7.7225e-08"/>
+                        <joint name="ruka_pinky_dip_joint" axis="0 1 0" range="0 2.09" class="ruka_joint"/>
+                        <geom pos="-0.01 0 -0.0037" type="mesh" class="ruka_visual"
+                              material="ruka_mat" mesh="ruka_Pinky_DIP" name="ruka_pinky_dip_vis"/>
+                        <geom pos="-0.01 0 0" type="box" class="ruka_collision"
+                              size="0.015 0.007 0.005" name="ruka_pinky_dip_col"/>
+
+                        <body name="ruka_pinky_pip" pos="-0.023 0 0.001" gravcomp="1">
+                          <inertial pos="-0.0236575 -8.70958e-08 0.00338829"
+                                    quat="4.96235e-06 0.688645 -5.22503e-06 0.725099" mass="0.00306875"
+                                    diaginertia="2.3085e-07 1.96147e-07 9.6228e-08"/>
+                          <joint name="ruka_pinky_pip_joint" axis="0 1 0" range="0 2.09" class="ruka_joint"/>
+                          <geom pos="0.013 0 -0.005" type="mesh" class="ruka_visual"
+                                material="ruka_mat" mesh="ruka_Pinky_PIP" name="ruka_pinky_pip_vis"/>
+                          <geom pos="-0.0125 0.0001 -0.0017" type="box" class="ruka_collision"
+                                size="0.0105 0.007 0.005" name="ruka_pinky_pip_col"/>
+                          <site name="ruka_pinky_tip" pos="-0.024 0 0" size="0.003" rgba="1 0 0 0.6"/>
+                        </body>
+                      </body>
+                    </body>
+
+                    <!-- ===== Thumb ===== -->
+                    <body name="ruka_thumb_mcp" pos="0.037688 0.022225 -0.025118"
+                          quat="0.707016 -0.707018 -0.011262 0.0112619" gravcomp="1">
+                      <inertial pos="0.0162526 -0.00468252 0.00333969"
+                                quat="0.00826993 0.759157 -0.00480907 0.650837" mass="0.00526715"
+                                diaginertia="7.53121e-07 5.49276e-07 3.69326e-07"/>
+                      <joint name="ruka_thumb_cmc_joint" axis="0 1 0" range="-3.314 0" class="ruka_joint"/>
+                      <geom pos="0 0 -0.007" type="mesh" class="ruka_visual"
+                            material="ruka_mat" mesh="ruka_Thumb_MCP" name="ruka_thumb_mcp_vis"/>
+                      <geom pos="0.013 -0.003 -0.0032" type="box" class="ruka_collision"
+                            size="0.02 0.0135 0.005" name="ruka_thumb_mcp_col"/>
+
+                      <body name="ruka_thumb_dip" pos="0.033935 -0.0044094 -0.0065999"
+                            quat="-2.59736e-06 -2.59734e-06 0.707105 0.707109" gravcomp="1">
+                        <inertial pos="-0.000359156 5.0434e-05 0.00349653"
+                                  quat="0.00102806 0.710958 0.0055407 0.703212" mass="0.0033002"
+                                  diaginertia="3.34624e-07 2.79543e-07 1.24607e-07"/>
+                        <joint name="ruka_thumb_mcp_joint" axis="0 1 0" range="0 1.57" class="ruka_joint"/>
+                        <geom pos="-0.013 0 -0.0019" quat="0.921061 -0.389418 0 0" type="mesh"
+                              class="ruka_visual" material="ruka_mat" mesh="ruka_Thumb_DIP"
+                              name="ruka_thumb_dip_vis"/>
+                        <geom pos="-0.013 0.003 0.0005" quat="0.921061 -0.389418 0 0" type="box"
+                              class="ruka_collision" size="0.015 0.007 0.005" name="ruka_thumb_dip_col"/>
+
+                        <body name="ruka_thumb_pip" pos="-0.027794 0.0035 7e-06"
+                              quat="0.923879 -0.382684 0 0" gravcomp="1">
+                          <inertial pos="-0.0282104 -4.96887e-08 0.00319437"
+                                    quat="-9.1855e-06 0.685351 9.75996e-06 0.728213" mass="0.00347336"
+                                    diaginertia="3.12351e-07 2.59469e-07 1.22086e-07"/>
+                          <joint name="ruka_thumb_ip_joint" axis="0 1 0" range="0 2.09" class="ruka_joint"/>
+                          <geom pos="0.015 0 -0.005" type="mesh" class="ruka_visual"
+                                material="ruka_mat" mesh="ruka_Thumb_PIP" name="ruka_thumb_pip_vis"/>
+                          <geom pos="-0.013 0 -0.0017" type="box" class="ruka_collision"
+                                size="0.013 0.0075 0.005" name="ruka_thumb_pip_col"/>
+                          <site name="ruka_thumb_tip" pos="-0.028 0 0" size="0.003" rgba="1 0 0 0.6"/>
+                        </body>
+                      </body>
+                    </body>
+                  </body>
+                  <!-- ============= END RUKA mount ============= -->
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <!-- ============================================================================
+       CONTACT EXCLUSIONS
+       Piper: base/link1 (geometric overlap by design).
+       RUKA: palm vs each finger MCP (joint axes pass through palm geometry).
+       ============================================================================ -->
+  <contact>
+    <exclude body1="base_link" body2="link1"/>
+    <exclude body1="ruka_palm" body2="ruka_index_mcp"/>
+    <exclude body1="ruka_palm" body2="ruka_middle_mcp"/>
+    <exclude body1="ruka_palm" body2="ruka_ring_mcp"/>
+    <exclude body1="ruka_palm" body2="ruka_pinky_mcp"/>
+    <exclude body1="ruka_palm" body2="ruka_thumb_mcp"/>
+    <!-- Belt-and-suspenders: explicitly exclude link6 from contacting the palm
+         (the mount is rigid; even if there is slight geometric overlap from our
+         5cm offset, we do not want the contact solver flagging it.) -->
+    <exclude body1="link6" body2="ruka_palm"/>
+  </contact>
+
+  <!-- ============================================================================
+       ACTUATORS
+       6 Piper position actuators (PD-controlled) + 15 RUKA general actuators.
+       Order matters for the keyframe ctrl array below.
+       ============================================================================ -->
+  <actuator>
+    <!-- Piper arm: 6 position actuators. Gains are higher than the original
+         Menagerie values to account for the RUKA hand's mass at the end effector
+         and to ensure tight tracking during grasp execution. -->
+    <position name="joint1" joint="joint1" class="piper" kp="200" kv="15"/>
+    <position name="joint2" joint="joint2" class="piper" kp="200" kv="15"/>
+    <position name="joint3" joint="joint3" class="piper" kp="200" kv="15"/>
+    <position name="joint4" joint="joint4" class="piper" kp="100" kv="10"/>
+    <position name="joint5" joint="joint5" class="piper" kp="100" kv="10"/>
+    <position name="joint6" joint="joint6" class="piper" kp="100" kv="10"/>
+
+    <!-- RUKA hand: 15 general actuators with explicit ctrlrange matching joint ranges.
+         The position-control behavior comes from biastype="affine" with biasprm="0 -1 0":
+         force = gainprm[0]*ctrl - 1*qpos  (i.e., spring-back to commanded position).
+         ctrlrange clamps user input to physically valid joint positions. -->
+    <general name="ruka_index_mcp_act"  joint="ruka_index_mcp_joint"  ctrlrange="0 2.44222" gainprm="2.44 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_index_dip_act"  joint="ruka_index_dip_joint"  ctrlrange="0 2.09"    gainprm="2.09 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_index_pip_act"  joint="ruka_index_pip_joint"  ctrlrange="0 2.09"    gainprm="2.09 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_middle_mcp_act" joint="ruka_middle_mcp_joint" ctrlrange="0 2.44222" gainprm="2.44 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_middle_dip_act" joint="ruka_middle_dip_joint" ctrlrange="0 2.09"    gainprm="2.09 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_middle_pip_act" joint="ruka_middle_pip_joint" ctrlrange="0 2.09"    gainprm="2.09 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_ring_mcp_act"   joint="ruka_ring_mcp_joint"   ctrlrange="0 2.44222" gainprm="2.44 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_ring_dip_act"   joint="ruka_ring_dip_joint"   ctrlrange="0 2.09"    gainprm="2.09 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_ring_pip_act"   joint="ruka_ring_pip_joint"   ctrlrange="0 2.09"    gainprm="2.09 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_pinky_mcp_act"  joint="ruka_pinky_mcp_joint"  ctrlrange="0 2.44222" gainprm="2.44 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_pinky_dip_act"  joint="ruka_pinky_dip_joint"  ctrlrange="0 2.09"    gainprm="2.09 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_pinky_pip_act"  joint="ruka_pinky_pip_joint"  ctrlrange="0 2.09"    gainprm="2.09 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_thumb_cmc_act"  joint="ruka_thumb_cmc_joint"  ctrlrange="-3.314 0"  gainprm="3.314 0" biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_thumb_mcp_act"  joint="ruka_thumb_mcp_joint"  ctrlrange="0 1.57"    gainprm="1.57 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+    <general name="ruka_thumb_pip_act"  joint="ruka_thumb_ip_joint"   ctrlrange="0 2.09"    gainprm="2.09 0"  biastype="affine" biasprm="0 -1 0" dyntype="none"/>
+  </actuator>
+
+  <!-- ============================================================================
+       KEYFRAME: home pose
+       qpos order:
+         [0:6]   Piper joints 1-6  (6 values)
+         [6:21]  RUKA joints      (15 values, all 0 = fully open hand)
+       ctrl order matches qpos order (since each joint has exactly one actuator).
+       
+       Piper home: joint2=1.57, joint3=-1.3485 (matches Menagerie's home pose).
+       RUKA home: all zeros (fully extended fingers).
+       ============================================================================ -->
+  <keyframe>
+    <key name="home"
+         qpos="0 1.57 -1.3485 0 0 0   0 0 0   0 0 0   0 0 0   0 0 0   0 0 0"
+         ctrl="0 1.57 -1.3485 0 0 0   0 0 0   0 0 0   0 0 0   0 0 0   0 0 0"/>
+  </keyframe>
+</mujoco>

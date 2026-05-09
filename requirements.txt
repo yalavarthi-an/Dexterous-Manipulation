@@ -1,0 +1,23 @@
+# Core simulation
+mujoco>=3.2.0
+
+# 3D vision / point clouds (Task 2 onward)
+open3d>=0.18.0
+trimesh>=4.0.0
+
+# Math / utilities
+numpy>=1.24
+scipy>=1.10
+
+# Visualization + I/O
+matplotlib>=3.7
+imageio[ffmpeg]>=2.31
+opencv-python>=4.8
+tqdm>=4.65
+pyyaml>=6.0
+
+# IK / planning helpers (Task 4)
+pin>=2.7   # Pinocchio (used for IK on the Piper arm)
+
+# (Add learned-grasp deps here once we commit to a grasp model in Task 3.
+#  Likely candidates: torch, MinkowskiEngine — held back until needed.)

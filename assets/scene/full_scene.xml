@@ -1,0 +1,101 @@
+<mujoco model="full_scene">
+  <!-- Full scene: Piper + RUKA robot, table, YCB objects, lights, floor.
+       This is the runtime scene used for grasping. Cameras are added in step 2.4. -->
+
+  <!-- Compiler: no meshdir set. Each included file's mesh paths are resolved
+       relative to that file's own directory. The robot file uses paths like
+       "meshes/piper/link2_2.obj" (resolved from its own location at assets/mounted/),
+       and the YCB fragment uses paths like "../mounted/meshes/ycb/..." (resolved
+       from its own location at assets/scene/). -->
+  <compiler angle="radian" autolimits="true"/>
+  <option integrator="implicitfast" cone="elliptic" impratio="10"/>
+
+  <!-- Bring in the robot. Its meshdir is now overridden by ours, so its
+       mesh paths (relative form: "piper/...") work correctly. -->
+  <include file="../mounted/piper_ruka.xml"/>
+
+  <!-- Scene-level visual settings (override the minimal ones from piper_ruka.xml) -->
+  <statistic center="0.4 0 0.7" extent="0.9" meansize="0.05"/>
+
+  <visual>
+    <headlight ambient="0.4 0.4 0.4" diffuse="0.6 0.6 0.6" specular="0.2 0.2 0.2"/>
+    <global azimuth="120" elevation="-20"/>
+    <quality shadowsize="4096"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge"
+             rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8"
+             width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true"
+              texrepeat="5 5" reflectance="0.2"/>
+    <material name="table_top" rgba="0.55 0.40 0.28 1.0"/>
+    <material name="table_leg" rgba="0.30 0.20 0.15 1.0"/>
+  </asset>
+
+  <worldbody>
+    <!-- Lights (the robot file already has its own; these add scene illumination) -->
+    <light name="scene_top"  pos="0.5 0  1.6" dir="0 0 -1" diffuse="0.7 0.7 0.7"/>
+    <light name="scene_left" pos="0.5 0.8 1.0" dir="0 -0.5 -1" diffuse="0.4 0.4 0.4"/>
+
+    <!-- ==========================================================
+         SCENE-MOUNTED CAMERAS (two fixed third-person views)
+         Both RealSense-D435-like: 640x480, fovy=58°, depth 0.2-2m.
+         Two cameras from opposite sides of the workspace give
+         complementary views — what one camera misses (back of objects),
+         the other sees. The fused point cloud covers ~95% of object
+         surfaces vs ~60% from a single camera.
+         ========================================================== -->
+    <!-- Camera 1: back-left, looking down at the table -->
+    <camera name="scene_cam"
+            pos="-0.3 0.7 1.7"
+            mode="targetbody"
+            target="table"
+            fovy="58"/>
+    <!-- Camera 2: front-right, looking back at the table from the opposite side -->
+    <camera name="scene_cam2"
+            pos="1.0 -0.5 1.5"
+            mode="targetbody"
+            target="table"
+            fovy="58"/>
+
+    <!-- Floor (overlaps the robot file's floor; this overrides material/visual) -->
+    <geom name="scene_floor" type="plane" size="2 2 0.05" material="groundplane"/>
+
+    <!-- ============== ROBOT PEDESTAL ==============
+         The Piper arm sits on a 70cm-tall pedestal. This puts the robot base
+         at the same height as the tabletop (z=0.70m), giving the arm a
+         comfortable 30-40cm of vertical workspace above the table for grasping.
+         Real Piper deployments use rigid mounting columns at workbench height. -->
+    <body name="robot_pedestal" pos="0 0 0">
+      <geom name="pedestal" type="cylinder" size="0.08 0.35"
+            pos="0 0 0.35" material="table_leg"
+            contype="1" conaffinity="3"/>
+      <geom name="pedestal_top" type="cylinder" size="0.10 0.005"
+            pos="0 0 0.695" material="table_leg"
+            contype="1" conaffinity="3"/>
+    </body>
+
+    <!-- ============== TABLE ==============
+         Table at world (+0.5, 0, 0), 80cm deep x 110cm wide, top at z=0.7m.
+         Widened to give 25cm margin from the outermost objects (at y=±0.30)
+         to the table edge (y=±0.55). -->
+    <body name="table" pos="0.5 0 0">
+      <geom name="table_top" type="box" size="0.40 0.55 0.02"
+            pos="0 0 0.68" material="table_top"
+            contype="1" conaffinity="3" friction="1.0 0.05 0.001"/>
+      <geom name="table_leg_1" type="box" size="0.02 0.02 0.33"
+            pos="-0.38 -0.53 0.33" material="table_leg" contype="1" conaffinity="3"/>
+      <geom name="table_leg_2" type="box" size="0.02 0.02 0.33"
+            pos="-0.38  0.53 0.33" material="table_leg" contype="1" conaffinity="3"/>
+      <geom name="table_leg_3" type="box" size="0.02 0.02 0.33"
+            pos=" 0.38 -0.53 0.33" material="table_leg" contype="1" conaffinity="3"/>
+      <geom name="table_leg_4" type="box" size="0.02 0.02 0.33"
+            pos=" 0.38  0.53 0.33" material="table_leg" contype="1" conaffinity="3"/>
+    </body>
+  </worldbody>
+
+  <!-- YCB objects (auto-generated; re-run scripts/build_objects_fragment.py to update) -->
+  <include file="ycb_objects.xml"/>
+</mujoco>

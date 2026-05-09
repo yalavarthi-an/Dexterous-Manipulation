@@ -1,0 +1,189 @@
+# ============================================================================
+# RUKA hand grasp presets
+# ============================================================================
+# Each preset is a dictionary of 15 joint-angle targets (in radians) for the
+# RUKA hand's actuators. The joint ordering matches the actuator order in
+# piper_ruka.xml (actuators 6-20):
+#
+#   index:  MCP [0, 2.44]  DIP [0, 2.09]  PIP [0, 2.09]
+#   middle: MCP [0, 2.44]  DIP [0, 2.09]  PIP [0, 2.09]
+#   ring:   MCP [0, 2.44]  DIP [0, 2.09]  PIP [0, 2.09]
+#   pinky:  MCP [0, 2.44]  DIP [0, 2.09]  PIP [0, 2.09]
+#   thumb:  CMC [-3.31, 0] MCP [0, 1.57]  IP  [0, 2.09]
+#
+# These are analytically-motivated starting values. Tune them visually
+# using: python scripts/preview_grasp_presets.py
+#
+# References:
+#   - Feix et al., "The GRASP Taxonomy of Human Grasp Types", IEEE T-HF 2016
+#   - Cutkosky, "On Grasp Choice, Grasp Models, and the Design of Hands for
+#     Manufacturing Tasks", IEEE T-RA 1989
+# ============================================================================
+
+# All fingers fully open — used as the pre-grasp hand shape
+open:
+  index_mcp:  0.0
+  index_dip:  0.0
+  index_pip:  0.0
+  middle_mcp: 0.0
+  middle_dip: 0.0
+  middle_pip: 0.0
+  ring_mcp:   0.0
+  ring_dip:   0.0
+  ring_pip:   0.0
+  pinky_mcp:  0.0
+  pinky_dip:  0.0
+  pinky_pip:  0.0
+  thumb_cmc:  0.0
+  thumb_mcp:  0.0
+  thumb_ip:   0.0
+
+# Power wrap: all fingers curl around the object, thumb opposes.
+# Good for: cylindrical objects (mustard bottle, mug body), elongated objects.
+power_wrap:
+  index_mcp:  1.5
+  index_dip:  1.5
+  index_pip:  1.5
+  middle_mcp: 1.5
+  middle_dip: 1.5
+  middle_pip: 1.5
+  ring_mcp:   1.5
+  ring_dip:   1.5
+  ring_pip:   1.5
+  pinky_mcp:  1.5
+  pinky_dip:  1.5
+  pinky_pip:  1.5
+  thumb_cmc: -1.5
+  thumb_mcp:  1.0
+  thumb_ip:   1.0
+
+# Precision pinch: index + thumb close on a thin/small object.
+# Middle, ring, pinky curl FULLY into the palm to stay out of the way.
+# Good for: banana, thin edges.
+precision_pinch:
+  index_mcp:  1.2
+  index_dip:  1.0
+  index_pip:  0.8
+  middle_mcp: 1.8
+  middle_dip: 1.5
+  middle_pip: 1.5
+  ring_mcp:   2.0
+  ring_dip:   1.8
+  ring_pip:   1.5
+  pinky_mcp:  2.0
+  pinky_dip:  1.8
+  pinky_pip:  1.5
+  thumb_cmc: -2.0
+  thumb_mcp:  1.0
+  thumb_ip:   0.8
+
+# Top grasp: aggressive "claw" from above — all fingers spread wide at the
+# MCP then curl hard at DIP/PIP. Like reaching over a box and clamping down.
+# Good for: cracker box (top-down approach on the wide face).
+top_grasp:
+  index_mcp:  2.2
+  index_dip:  1.8
+  index_pip:  1.5
+  middle_mcp: 2.2
+  middle_dip: 1.8
+  middle_pip: 1.5
+  ring_mcp:   2.2
+  ring_dip:   1.8
+  ring_pip:   1.5
+  pinky_mcp:  2.2
+  pinky_dip:  1.8
+  pinky_pip:  1.5
+  thumb_cmc: -2.5
+  thumb_mcp:  1.2
+  thumb_ip:   1.2
+
+# Spherical: gentle symmetric curl — all fingers close evenly, forming a
+# round cavity. Less aggressive MCP than top_grasp, more even DIP/PIP.
+# Good for: tennis ball, apple, any roughly spherical object.
+spherical:
+  index_mcp:  1.0
+  index_dip:  1.3
+  index_pip:  1.3
+  middle_mcp: 1.0
+  middle_dip: 1.3
+  middle_pip: 1.3
+  ring_mcp:   1.0
+  ring_dip:   1.3
+  ring_pip:   1.3
+  pinky_mcp:  1.0
+  pinky_dip:  1.3
+  pinky_pip:  1.3
+  thumb_cmc: -2.5
+  thumb_mcp:  1.0
+  thumb_ip:   1.0
+
+# Tripod: thumb + index + middle form a triangular closure.
+# Ring and pinky are FULLY curled into a fist — visually distinct from
+# spherical/top_grasp. Good for: mug handle, small objects.
+tripod:
+  index_mcp:  0.8
+  index_dip:  1.0
+  index_pip:  0.8
+  middle_mcp: 0.8
+  middle_dip: 1.0
+  middle_pip: 0.8
+  ring_mcp:   2.2
+  ring_dip:   2.0
+  ring_pip:   2.0
+  pinky_mcp:  2.2
+  pinky_dip:  2.0
+  pinky_pip:  2.0
+  thumb_cmc: -2.5
+  thumb_mcp:  1.2
+  thumb_ip:   1.0
+
+# ============================================================================
+# Object-to-grasp-type mapping
+# ============================================================================
+# For each YCB object, which grasp type(s) to propose and from which approach.
+# approach: "top" means palm faces downward (-Z in world at approach),
+#           "side" means palm faces horizontally toward the object center.
+#
+# Multiple entries per object are ranked: first = preferred, others = fallback.
+# ============================================================================
+
+object_grasps:
+  banana:
+    - type: precision_pinch
+      approach: top
+      description: "pinch the banana from above along its short axis"
+    - type: power_wrap
+      approach: side
+      description: "wrap fingers around the banana body from the side"
+
+  mug:
+    - type: power_wrap
+      approach: top
+      description: "insert fingers into mug opening from above, then grip inner wall"
+    - type: power_wrap
+      approach: side
+      description: "wrap fingers around the mug body from the side"
+
+  cracker_box:
+    - type: power_wrap
+      approach: side
+      description: "wrap on the short (thin) axis from the side"
+    - type: top_grasp
+      approach: top
+      description: "splay fingers over the top face and close on both sides"
+
+  mustard_bottle:
+    - type: power_wrap
+      approach: side
+      description: "wrap fingers around the bottle neck/body from the side"
+    - type: top_grasp
+      approach: top
+      description: "grab the cap area from above"
+
+  tennis_ball:
+    - type: spherical
+      approach: top
+      description: "symmetric finger closure from above"
+    - type: tripod
+      approach: top
+      description: "three-finger pinch from above"
