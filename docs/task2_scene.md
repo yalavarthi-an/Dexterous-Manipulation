@@ -97,6 +97,16 @@ wrist moves, the camera moves and rotates with it. At the home pose the
 camera looks roughly forward+up (the wrist's natural at-rest direction);
 during a grasping approach the camera looks at the target object.
 
+> **Note on `wrist_cam` in practice.** I keep `wrist_cam` defined in the
+> scene because real eye-in-hand setups need it, and the rendering pipeline
+> renders it for completeness. In this submission, however, **the primary
+> cameras driving Tasks 2–4 are `scene_cam` and `scene_cam2`** — they own
+> ~95% of the fused-cloud coverage and all the OBBs the heuristic grasp
+> pipeline operates on. The wrist view does not contribute usefully at the
+> home pose (it stares at the sky, ~13% valid pixels) and is not consumed
+> by the segmentation, OBB, or grasp-pose stages. Treat `wrist_cam` as
+> documented-and-wired-up, but inert in the actual perception path.
+
 ### Why this configuration
 
 I chose **2 scene + 1 wrist** after iterating from a simpler 1+1 setup:
@@ -194,8 +204,16 @@ A typical run I get (with the 2-scene-cam + 1-wrist-cam configuration):
 
 The wrist-cam's low valid-pixel count is expected on my setup: at the home pose the
 camera looks at the sky, where there is no depth measurement (only the
-visible hand and palm strip register valid depth). I rely on it during grasp
-execution (Task 4), not for initial scene perception at home.
+visible hand and palm strip register valid depth).
+
+In practice, **`scene_cam` and `scene_cam2` are the primary cameras** for
+this submission — together they provide essentially all of the useful
+~95% surface coverage that feeds Task 3's OBB / grasp-pose heuristics. The
+wrist camera is rendered (for parity with real eye-in-hand pipelines) but
+not actually consumed downstream. I left it in place rather than removing
+it so the scene matches what a deployed Piper+RUKA setup would expose,
+and so adding visual-servoing later would be a drop-in addition rather
+than a scene rebuild.
 
 ## Files
 

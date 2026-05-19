@@ -10,7 +10,9 @@ This is my PathOn Robotics take-home submission: an end-to-end dexterous-graspin
 | 2 | Tabletop scene with YCB objects + RGB-D cameras | ✅ Complete |
 | 3 | 3D vision-based grasp prediction | ✅ Complete |
 | 4 | Planning and execution | ✅ Complete (4/5 objects successful) |
-| 5 | Demo video + evaluation | ☐ Pending final recording/package |
+| 5 | Demo video + evaluation | ✅ Complete — **Demo:** [YouTube](https://youtu.be/tW-jJHIFZbQ); notes in `docs/task5_demo.md` |
+
+**Demo video:** [https://youtu.be/tW-jJHIFZbQ](https://youtu.be/tW-jJHIFZbQ) — quad-view batch run for all five YCB objects. Regenerate the local MP4 with `record_all_grasps.py` (writes under `outputs/`, gitignored).
 
 ## Quickstart
 
@@ -33,9 +35,13 @@ python scripts/visualize_grasps.py --save
 
 # 5. Execute one object grasp (Task 4)
 python scripts/run_grasp.py --object banana --headless
+
+# 6. Task 5: batch quad-view MP4 (after proposals exist)
+python scripts/visualize_grasps.py --save
+python scripts/record_all_grasps.py --out outputs/demo_all_grasps.mp4
 ```
 
-## Latest reverification (May 9, 2026)
+## Latest reverification (May 10, 2026)
 
 I reran Tasks 1–4 end-to-end in the `pathon` conda environment.
 
@@ -69,7 +75,7 @@ pathon_takehome/
 │   ├── ycb_objects/               # source YCB MJCFs + meshes for the five objects
 │   ├── tabletop/                  # optional tabletop-only assets
 │   └── scene/                     # full_scene.xml, ycb_objects.xml, etc.
-├── scripts/                       # entry-point scripts I run for each task
+├── scripts/                       # entry points (incl. Task 5 `record_all_grasps.py`)
 ├── docs/                          # per-task notes (first-person)
 ├── report/
 │   └── technical_report.md        # submission report draft
@@ -77,6 +83,8 @@ pathon_takehome/
 ├── requirements.txt
 └── README.md                      # this file
 ```
+
+`outputs/` is local-only (`.gitignore`); rerender or re-record with the scripts above when needed.
 
 ## What's in the combined robot
 
@@ -93,7 +101,7 @@ pathon_takehome/
 - Python 3.10
 - MuJoCo ≥ 3.2
 - Linux (I tested on Ubuntu) with NVIDIA GPU recommended for offscreen rendering
-  (Tasks 2–4 use it for camera image rendering)
+  (Tasks 2–5 use it for camera / mosaic rendering)
 
 ## License notes
 

@@ -22,7 +22,7 @@ axis is world +Z (descend straight down).
 from __future__ import annotations
 
 import dataclasses
-from typing import Optional
+from typing import Callable, Optional
 
 import mujoco
 import numpy as np
@@ -132,6 +132,16 @@ class TrajectoryResult:
 # Helpers
 # ============================================================================
 
+def _present(viewer: Optional[object],
+             on_step: Optional[Callable[[mujoco.MjModel, mujoco.MjData], None]],
+             model: mujoco.MjModel, data: mujoco.MjData) -> None:
+    """Interactive viewer hook + optional per-step callback after each mj_step."""
+    if viewer is not None:
+        viewer.sync()
+    if on_step is not None:
+        on_step(model, data)
+
+
 def _quat_to_matrix(q: np.ndarray) -> np.ndarray:
     """(w,x,y,z) quaternion -> 3x3 rotation matrix."""
     w, x, y, z = q
@@ -143,7 +153,7 @@ def _quat_to_matrix(q: np.ndarray) -> np.ndarray:
 
 
 def _smooth_motion(model, data, arm_start, arm_target, hand_target,
-                   duration, log_fn=None, viewer=None):
+                   duration, log_fn=None, viewer=None, on_step=None):
     """Cubic ease-in/ease-out interpolation of arm joint targets in joint
     space. Hand control is held at `hand_target` throughout."""
     dt = model.opt.timestep
@@ -162,12 +172,11 @@ def _smooth_motion(model, data, arm_start, arm_target, hand_target,
         mujoco.mj_step(model, data)
         if log_fn is not None:
             log_fn(data)
-        if viewer is not None:
-            viewer.sync()
+        _present(viewer, on_step, model, data)
 
 
 def _smooth_finger_close(model, data, arm_hold, hand_start, hand_target,
-                         duration, log_fn=None, viewer=None):
+                         duration, log_fn=None, viewer=None, on_step=None):
     """Smoothly close fingers from hand_start to hand_target. Arm held still."""
     dt = model.opt.timestep
     n_steps = max(1, int(duration / dt))
@@ -187,13 +196,12 @@ def _smooth_finger_close(model, data, arm_hold, hand_start, hand_target,
         mujoco.mj_step(model, data)
         if log_fn is not None:
             log_fn(data)
-        if viewer is not None:
-            viewer.sync()
+        _present(viewer, on_step, model, data)
 
 
 def _smooth_finger_close_thumb_first(model, data, arm_hold, hand_target,
                                      thumb_duration, fingers_duration,
-                                     log_fn=None, viewer=None):
+                                     log_fn=None, viewer=None, on_step=None):
     """Sequential finger close: thumb first, then other fingers.
 
     Phase A (thumb_duration s):
@@ -232,8 +240,7 @@ def _smooth_finger_close_thumb_first(model, data, arm_hold, hand_target,
         mujoco.mj_step(model, data)
         if log_fn is not None:
             log_fn(data)
-        if viewer is not None:
-            viewer.sync()
+        _present(viewer, on_step, model, data)
 
     # ---- Phase B: fingers close, thumb held at target ----
     n_steps_fingers = max(1, int(fingers_duration / dt))
@@ -251,11 +258,10 @@ def _smooth_finger_close_thumb_first(model, data, arm_hold, hand_target,
         mujoco.mj_step(model, data)
         if log_fn is not None:
             log_fn(data)
-        if viewer is not None:
-            viewer.sync()
+        _present(viewer, on_step, model, data)
 
 
-def _hold(model, data, duration, log_fn=None, viewer=None):
+def _hold(model, data, duration, log_fn=None, viewer=None, on_step=None):
     """Hold current ctrl for `duration` seconds (no interpolation, just step)."""
     dt = model.opt.timestep
     n_steps = max(1, int(duration / dt))
@@ -263,8 +269,7 @@ def _hold(model, data, duration, log_fn=None, viewer=None):
         mujoco.mj_step(model, data)
         if log_fn is not None:
             log_fn(data)
-        if viewer is not None:
-            viewer.sync()
+        _present(viewer, on_step, model, data)
 
 
 def _compute_intermediate_pos(grasp_pos: np.ndarray, obj_pos: np.ndarray,
@@ -300,6 +305,7 @@ def execute_grasp(
     proposal: GraspProposal,
     record_log: bool = True,
     viewer=None,
+    on_step: Optional[Callable[[mujoco.MjModel, mujoco.MjData], None]] = None,
 ) -> TrajectoryResult:
     """Execute a grasp proposal end-to-end with multi-waypoint trajectory.
 
@@ -308,6 +314,7 @@ def execute_grasp(
         proposal:    the grasp to attempt
         record_log:  if True, log per-timestep state for diagnostics
         viewer:      optional mujoco.viewer handle - if provided, sync() each step
+        on_step:      optional callback(model, data) after each mj_step hook
 
     Returns:
         TrajectoryResult describing what happened
@@ -464,8 +471,9 @@ def execute_grasp(
                    arm_start=q_home, arm_target=q_pre,
                    hand_target=open_hand,
                    duration=DUR_HOME_TO_PREGRASP,
-                   log_fn=log_fn, viewer=viewer)
-    _hold(model, data, DUR_PHASE_SETTLE, log_fn=log_fn, viewer=viewer)
+                   log_fn=log_fn, viewer=viewer, on_step=on_step)
+    _hold(model, data, DUR_PHASE_SETTLE, log_fn=log_fn, viewer=viewer,
+          on_step=on_step)
 
     # Knock-detection
     if data.xpos[obj_bid, 2] < initial_object_z - KNOCK_DETECTION_DROP:
@@ -481,31 +489,34 @@ def execute_grasp(
                              hand_start=open_hand,
                              hand_target=semi_closed,
                              duration=MUG_SEMI_CLOSE_DURATION,
-                             log_fn=log_fn, viewer=viewer)
+                             log_fn=log_fn, viewer=viewer, on_step=on_step)
 
         # Descend to intermediate with semi-closed fingers
         _smooth_motion(model, data,
                        arm_start=q_pre, arm_target=q_int,
                        hand_target=semi_closed,
                        duration=DUR_PREGRASP_TO_INTERMEDIATE,
-                       log_fn=log_fn, viewer=viewer)
-        _hold(model, data, DUR_PHASE_SETTLE, log_fn=log_fn, viewer=viewer)
+                       log_fn=log_fn, viewer=viewer, on_step=on_step)
+        _hold(model, data, DUR_PHASE_SETTLE, log_fn=log_fn, viewer=viewer,
+              on_step=on_step)
 
         # Insert into mug (intermediate -> grasp) with semi-closed fingers
         _smooth_motion(model, data,
                        arm_start=q_int, arm_target=q_grasp,
                        hand_target=semi_closed,
                        duration=DUR_INTERMEDIATE_TO_GRASP,
-                       log_fn=log_fn, viewer=viewer)
-        _hold(model, data, DUR_PHASE_SETTLE, log_fn=log_fn, viewer=viewer)
+                       log_fn=log_fn, viewer=viewer, on_step=on_step)
+        _hold(model, data, DUR_PHASE_SETTLE, log_fn=log_fn, viewer=viewer,
+              on_step=on_step)
 
         # Push down 1cm to seat fingers inside the mug before gripping
         _smooth_motion(model, data,
                        arm_start=q_grasp, arm_target=q_push,
                        hand_target=semi_closed,
                        duration=0.5,
-                       log_fn=log_fn, viewer=viewer)
-        _hold(model, data, DUR_PHASE_SETTLE, log_fn=log_fn, viewer=viewer)
+                       log_fn=log_fn, viewer=viewer, on_step=on_step)
+        _hold(model, data, DUR_PHASE_SETTLE, log_fn=log_fn, viewer=viewer,
+              on_step=on_step)
 
         # Function B: close middle + ring + thumb (grip inner wall)
         _smooth_finger_close(model, data,
@@ -513,7 +524,7 @@ def execute_grasp(
                              hand_start=semi_closed,
                              hand_target=MUG_GRIP_FINGERS,
                              duration=DUR_CLOSE_FINGERS,
-                             log_fn=log_fn, viewer=viewer)
+                             log_fn=log_fn, viewer=viewer, on_step=on_step)
 
     else:
         # ---- NORMAL SEQUENCE (all other objects) ----
@@ -522,8 +533,9 @@ def execute_grasp(
                        arm_start=q_pre, arm_target=q_int,
                        hand_target=open_hand,
                        duration=DUR_PREGRASP_TO_INTERMEDIATE,
-                       log_fn=log_fn, viewer=viewer)
-        _hold(model, data, DUR_PHASE_SETTLE, log_fn=log_fn, viewer=viewer)
+                       log_fn=log_fn, viewer=viewer, on_step=on_step)
+        _hold(model, data, DUR_PHASE_SETTLE, log_fn=log_fn, viewer=viewer,
+              on_step=on_step)
 
         if data.xpos[obj_bid, 2] < initial_object_z - KNOCK_DETECTION_DROP:
             return make_result(False, "OBJECT_KNOCKED",
@@ -535,8 +547,9 @@ def execute_grasp(
                        arm_start=q_int, arm_target=q_grasp,
                        hand_target=open_hand,
                        duration=DUR_INTERMEDIATE_TO_GRASP,
-                       log_fn=log_fn, viewer=viewer)
-        _hold(model, data, DUR_PHASE_SETTLE, log_fn=log_fn, viewer=viewer)
+                       log_fn=log_fn, viewer=viewer, on_step=on_step)
+        _hold(model, data, DUR_PHASE_SETTLE, log_fn=log_fn, viewer=viewer,
+              on_step=on_step)
 
         # PHASE 4: CLOSE FINGERS
         _smooth_finger_close(model, data,
@@ -544,7 +557,7 @@ def execute_grasp(
                              hand_start=open_hand,
                              hand_target=finger_angles,
                              duration=DUR_CLOSE_FINGERS,
-                             log_fn=log_fn, viewer=viewer)
+                             log_fn=log_fn, viewer=viewer, on_step=on_step)
 
     # PHASE 5: LIFT (fingers held in grasp configuration)
     lift_hand_target = MUG_GRIP_FINGERS if is_mug_insert else finger_angles
@@ -553,8 +566,9 @@ def execute_grasp(
                    arm_start=lift_arm_start, arm_target=q_lift,
                    hand_target=lift_hand_target,
                    duration=DUR_GRASP_TO_LIFT,
-                   log_fn=log_fn, viewer=viewer)
-    _hold(model, data, DUR_FINAL_SETTLE, log_fn=log_fn, viewer=viewer)
+                   log_fn=log_fn, viewer=viewer, on_step=on_step)
+    _hold(model, data, DUR_FINAL_SETTLE, log_fn=log_fn, viewer=viewer,
+          on_step=on_step)
 
     # ------------------------------------------------------------------
     # Success check
@@ -583,6 +597,7 @@ def execute_best_proposal(
     object_name: str,
     record_log: bool = True,
     viewer=None,
+    on_step: Optional[Callable[[mujoco.MjModel, mujoco.MjData], None]] = None,
     verbose: bool = True,
 ) -> Optional[TrajectoryResult]:
     """Try proposals for `object_name` in score order, executing the first
@@ -623,7 +638,8 @@ def execute_best_proposal(
             print(f"  Executing {proposal.grasp_type} {proposal.approach} "
                   f"(score {proposal.score:.2f})")
         return execute_grasp(model, data, proposal,
-                             record_log=record_log, viewer=viewer)
+                             record_log=record_log, viewer=viewer,
+                             on_step=on_step)
 
     if verbose:
         print(f"  No reachable proposal for '{object_name}'")

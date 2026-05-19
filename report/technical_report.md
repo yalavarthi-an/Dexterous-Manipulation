@@ -1,7 +1,7 @@
 # Dexterous Manipulation in MuJoCo: RUKA Hand on Piper Arm
 **PathOn Robotics Take-Home Project — Technical Report**
 
-*[Your name] · [Date]*
+*Anish Yalavarthi · May 10, 2026*
 
 ---
 
@@ -10,7 +10,7 @@
 In this report I summarize the end-to-end dexterous-grasping pipeline I built in MuJoCo: the
 NYU RUKA 5-finger underactuated hand (15 DoF) mounted on the AgileX Piper 6-DoF
 collaborative arm, picking YCB objects from a tabletop using 3D-vision-based grasp
-prediction. I organized the work into four main pieces:
+prediction. I organized the work into five main pieces:
 
 1. **Combined robot model** (`piper_ruka.xml`) — I re-parented the RUKA palm onto Piper's
    `link6` body with a **10 cm** offset along +Z and a single 180° rotation around the diagonal axis
@@ -24,8 +24,9 @@ prediction. I organized the work into four main pieces:
 4. **Planning and execution** — I run multi-waypoint IK on the `palm` site using damped
    least-squares (`src/planning/ik_solver.py`) and a state machine in `src/planning/executor.py`:
    `home -> pre-grasp -> intermediate -> grasp -> close -> lift`.
+5. **Demo video** — I batch-record all objects with `scripts/record_all_grasps.py` (quad-view mosaic, H.264 MP4 via `imageio[ffmpeg]`). The submission clip is **[on YouTube](https://youtu.be/tW-jJHIFZbQ)**; `docs/task5_demo.md` documents reproduction and how it aligns with the Task 4 evaluation.
 
-The submitted ZIP contains my code, diagnostic scripts, and per-task notes under `docs/`.
+The submitted bundle contains my code, diagnostic scripts, per-task notes under `docs/`, and the technical report (`report/`).
 
 ---
 
@@ -74,8 +75,13 @@ vertical FOV, depth in 0.1–3m. I place `scene_cam` at `(-0.3, 0.7, 1.7)` (back
 and `scene_cam2` at `(1.0, -0.5, 1.5)` (front-right), both targeting the
 table center. I added the second scene camera after I saw partial clouds and biased OBBs
 with a single view; the fused cloud grew to ~620k points and my OBBs centered better.
-I mount `wrist_cam` on the back of the RUKA palm looking along the finger
-direction for close-range depth during execution.
+**`scene_cam` and `scene_cam2` are the primary cameras** that drive Tasks 2–4 —
+together they provide ~95% surface coverage of the objects on the table. I also
+mount `wrist_cam` on the back of the RUKA palm looking along the finger direction,
+but in this submission it is wired up for parity with real eye-in-hand setups
+rather than actively used: at the home pose it stares at the sky (~13% valid
+depth) and the heuristic perception path does not consume it. I left it defined
+so visual-servoing could be a drop-in addition later.
 
 I wrote `scripts/render_scene.py` to iterate over all
 cameras and produce, per camera: RGB PNG, raw float32 depth, colorized
@@ -182,7 +188,7 @@ orientation constraints make my current top-insert strategy unreliable.
 
 ## 4. Results
 
-On my reverification run (May 9, 2026) over all five configured objects:
+On my latest reverification run (May 10, 2026) over all five configured objects:
 
 | Object | Result | Lift height | Notes |
 |---|---|---:|---|
@@ -197,7 +203,19 @@ I achieved **4/5 successful grasps (80%)**, which exceeds the requirement of at 
 
 ---
 
-## 5. Key learnings and what I would do differently
+## 5. Demo video (Task 5)
+
+The submission demo is hosted on YouTube: **<https://youtu.be/tW-jJHIFZbQ>**.
+
+It shows the five-object batch in one continuous quad-view layout (matching the mosaic from
+`scripts/record_all_grasps.py`): two fixed scene viewpoints on the table plus two lateral
+views parented to the palm. Locally I regenerate the underlying MP4 with
+`visualize_grasps.py --save` followed by `record_all_grasps.py` (artifacts land under gitignored `outputs/`).
+Per-object narrative and quantitative lift metrics appear in §4 above and in `docs/task4_execution.md`.
+
+---
+
+## 6. Key learnings and what I would do differently
 
 Key takeaways for me:
 - Empirical visual verification beats analytic guessing for geometry-fit decisions
@@ -210,7 +228,7 @@ Key takeaways for me:
 
 ---
 
-## 6. References
+## 7. References
 
 - AgileX Piper SDK: <https://github.com/agilexrobotics/piper_sdk>
 - AgileX Piper ROS: <https://github.com/agilexrobotics/Piper_ros>

@@ -52,9 +52,16 @@ I render RGB + depth from three cameras:
 
 | Camera | Position | Purpose |
 |---|---|---|
-| `scene_cam` | (−0.3, 0.7, 1.7), targets table | Primary overview (left-back) |
-| `scene_cam2` | (1.0, −0.5, 1.5), targets table | Secondary view (right-front) |
-| `wrist_cam` | Palm body, pos=(0,−0.04,0.02) | Wrist-mounted close-up |
+| `scene_cam` | (−0.3, 0.7, 1.7), targets table | **Primary** overview (left-back) |
+| `scene_cam2` | (1.0, −0.5, 1.5), targets table | **Primary** secondary view (right-front) |
+| `wrist_cam` | Palm body, pos=(0,−0.04,0.02) | Wired up for parity with real eye-in-hand setups; **not used by the perception path** in this submission |
+
+In practice, the heuristic pipeline below is driven entirely by
+`scene_cam` + `scene_cam2`. `wrist_cam` is rendered for completeness but
+contributes almost no valid depth at the home pose (~13% of pixels — it
+looks at the sky there), and the segmentation / OBB / grasp-pose stages
+do not benefit from it. I keep it defined so adding a visual-servoing
+stage later would be a drop-in change.
 
 I unproject depth images using pinhole camera intrinsics (from `fovy` and
 image resolution). I fuse all three clouds into a single scene cloud
