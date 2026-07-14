@@ -10,9 +10,9 @@ This repository contains an end-to-end dexterous-grasping pipeline in MuJoCo. I 
 | 2 | Tabletop scene with YCB objects + RGB-D cameras | ✅ Complete |
 | 3 | 3D vision-based grasp prediction | ✅ Complete |
 | 4 | Planning and execution | ✅ Complete (4/5 objects successful) |
-| 5 | Demo video + evaluation | ✅ Complete — **Demo:** [YouTube](https://youtu.be/tW-jJHIFZbQ); notes in `docs/task5_demo.md` |
+| 5 | Demo video + evaluation | ✅ Complete — notes in `docs/task5_demo.md` |
 
-**Demo video:** [https://youtu.be/tW-jJHIFZbQ](https://youtu.be/tW-jJHIFZbQ) — quad-view batch run for all five YCB objects. Regenerate the local MP4 with `record_all_grasps.py` (writes under `outputs/`, gitignored).
+Regenerate the local quad-view MP4 for all five YCB objects with `record_all_grasps.py` (writes under `outputs/`, gitignored).
 
 ## Quickstart
 

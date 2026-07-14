@@ -24,7 +24,7 @@ prediction. I organized the work into five main pieces:
 4. **Planning and execution** — I run multi-waypoint IK on the `palm` site using damped
    least-squares (`src/planning/ik_solver.py`) and a state machine in `src/planning/executor.py`:
    `home -> pre-grasp -> intermediate -> grasp -> close -> lift`.
-5. **Demo video** — I batch-record all objects with `scripts/record_all_grasps.py` (quad-view mosaic, H.264 MP4 via `imageio[ffmpeg]`). The demo clip is **[on YouTube](https://youtu.be/tW-jJHIFZbQ)**; `docs/task5_demo.md` documents reproduction and how it aligns with the Task 4 evaluation.
+5. **Demo video** — I batch-record all objects with `scripts/record_all_grasps.py` (quad-view mosaic, H.264 MP4 via `imageio[ffmpeg]`). `docs/task5_demo.md` documents reproduction and how it aligns with the Task 4 evaluation.
 
 The repository contains my code, diagnostic scripts, per-task notes under `docs/`, and the technical report (`report/`).
 
@@ -205,9 +205,7 @@ I achieved **4/5 successful grasps (80%)**, which exceeds the requirement of at 
 
 ## 5. Demo video (Task 5)
 
-The submission demo is hosted on YouTube: **<https://youtu.be/tW-jJHIFZbQ>**.
-
-It shows the five-object batch in one continuous quad-view layout (matching the mosaic from
+The generated demo shows the five-object batch in one continuous quad-view layout (matching the mosaic from
 `scripts/record_all_grasps.py`): two fixed scene viewpoints on the table plus two lateral
 views parented to the palm. Locally I regenerate the underlying MP4 with
 `visualize_grasps.py --save` followed by `record_all_grasps.py` (artifacts land under gitignored `outputs/`).
