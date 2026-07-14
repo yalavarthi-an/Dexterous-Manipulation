@@ -77,6 +77,8 @@ python scripts/check_contacts.py
 
 ## `record_all_grasps.py` (Task 5 demo)
 
+Demo clip: [YouTube top-down grasp demo](https://youtu.be/AAiWuzB72V0).
+
 Offline quad-mosaic recorder: two fixed cameras on the tabletop plus two lateral views riding the palm ±thumb axes. Each object run loads `full_scene.xml`, settles physics, calls `execute_best_proposal(...)`, captures RGB frames every *n*-th physics step (`--stride`), and stitches a 2×2 MP4 (requires **`imageio[ffmpeg]`** in `requirements.txt`).
 
 ```bash

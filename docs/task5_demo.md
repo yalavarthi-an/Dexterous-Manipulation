@@ -4,6 +4,8 @@
 
 Task 5 asked for a **demo video** of the dexterous-grasp pipeline and an **evaluation** of success on the configured objects.
 
+**Demo:** [YouTube top-down grasp demo](https://youtu.be/AAiWuzB72V0)
+
 The recording shows each of the five YCB targets in sequence: two fixed tabletop views plus two lateral views rigged to the palm, matching the mosaic produced by `scripts/record_all_grasps.py`.
 
 ---

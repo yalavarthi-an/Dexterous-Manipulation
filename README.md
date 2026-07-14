@@ -8,9 +8,9 @@ The scene combines the Piper arm, the mounted RUKA hand, and five YCB objects on
 
 ## Demo
 
-<video src="outputs/images/top_down.mp4" controls width="720"></video>
+[![Top-down grasp demo](https://img.youtube.com/vi/AAiWuzB72V0/hqdefault.jpg)](https://youtu.be/AAiWuzB72V0)
 
-The short top-down clip shows one object-level grasp execution from the simulated tabletop setup. Regenerate longer local MP4s with `record_all_grasps.py` (writes under `outputs/`, gitignored except for `outputs/images/`).
+Watch the short top-down demo on [YouTube](https://youtu.be/AAiWuzB72V0). The clip shows one object-level grasp execution from the simulated tabletop setup. Regenerate longer local MP4s with `record_all_grasps.py` (writes under `outputs/`, gitignored except for `outputs/images/`).
 
 ## Status
 
