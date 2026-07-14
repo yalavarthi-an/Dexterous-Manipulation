@@ -15,8 +15,8 @@ The recording shows each of the five YCB targets in sequence: two fixed tabletop
 Offline I run the same grasp proposals and executor as Tasks 3–4, but step MuJoCo with a fixed `--stride`, capture RGB from four virtual cameras each frame, and stitch a **2×2 H.264 MP4** via `imageio[ffmpeg]` (dependency is already listed in `requirements.txt`).
 
 ```bash
-conda activate pathon
-cd /path/to/pathon_takehome_test
+conda activate dexterous-manipulation
+cd /path/to/dexterous_manipulation
 python scripts/visualize_grasps.py --save
 python scripts/record_all_grasps.py --out outputs/demo_all_grasps.mp4
 ```

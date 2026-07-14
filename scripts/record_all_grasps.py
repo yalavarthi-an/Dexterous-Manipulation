@@ -12,8 +12,8 @@ FoV raster often reads upside-down; pass --no-top-flip if yours does not.
 Depends on imageio[ffmpeg] for encoding.
 
 Usage:
-  conda activate pathon
-  cd /path/to/pathon_takehome_test
+  conda activate dexterous-manipulation
+  cd /path/to/dexterous_manipulation
   python scripts/record_all_grasps.py --out outputs/demo_all_grasps.mp4
 
   python scripts/record_all_grasps.py --objects banana,tennis_ball \\

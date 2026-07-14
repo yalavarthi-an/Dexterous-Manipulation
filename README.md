@@ -1,6 +1,6 @@
 # Dexterous Manipulation in MuJoCo: RUKA Hand + Piper Arm
 
-This is my PathOn Robotics take-home submission: an end-to-end dexterous-grasping pipeline in MuJoCo. I mounted the RUKA 5-finger hand on the AgileX Piper 6-DoF arm and built a tabletop scene with YCB objects, RGB-D style cameras, a heuristic 3D grasp proposal stage, and IK-driven execution.
+This repository contains an end-to-end dexterous-grasping pipeline in MuJoCo. I mounted the RUKA 5-finger hand on the AgileX Piper 6-DoF arm and built a tabletop scene with YCB objects, RGB-D style cameras, a heuristic 3D grasp proposal stage, and IK-driven execution.
 
 ## Status
 
@@ -18,8 +18,8 @@ This is my PathOn Robotics take-home submission: an end-to-end dexterous-graspin
 
 ```bash
 # 1. Create env
-conda create -n pathon python=3.10 -y
-conda activate pathon
+conda create -n dexterous-manipulation python=3.10 -y
+conda activate dexterous-manipulation
 pip install -r requirements.txt
 
 # 2. Verify the mounted robot
@@ -43,7 +43,7 @@ python scripts/record_all_grasps.py --out outputs/demo_all_grasps.mp4
 
 ## Latest reverification (May 10, 2026)
 
-I reran Tasks 1–4 end-to-end in the `pathon` conda environment.
+I reran Tasks 1–4 end-to-end in the `dexterous-manipulation` conda environment.
 
 - Task 1 checks pass:
   - symbolic mount alignment: 0.000 deg
@@ -63,7 +63,7 @@ I reran Tasks 1–4 end-to-end in the `pathon` conda environment.
 ## Repository layout
 
 ```
-pathon_takehome/
+dexterous_manipulation/
 ├── assets/                 # robot models and meshes I ship for execution
 │   ├── mounted/
 │   │   ├── piper_ruka.xml         # combined Piper + RUKA MJCF (deliverable)
