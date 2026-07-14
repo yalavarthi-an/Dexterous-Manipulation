@@ -2,6 +2,16 @@
 
 This repository contains an end-to-end dexterous-grasping pipeline in MuJoCo. I mounted the RUKA 5-finger hand on the AgileX Piper 6-DoF arm and built a tabletop scene with YCB objects, RGB-D style cameras, a heuristic 3D grasp proposal stage, and IK-driven execution.
 
+![Piper arm with mounted RUKA hand over the YCB tabletop scene](outputs/images/Screenshot%20from%202026-05-07%2017-13-03.png)
+
+The scene combines the Piper arm, the mounted RUKA hand, and five YCB objects on a tabletop for grasp proposal and execution tests.
+
+## Demo
+
+<video src="outputs/images/top_down.mp4" controls width="720"></video>
+
+The short top-down clip shows one object-level grasp execution from the simulated tabletop setup. Regenerate longer local MP4s with `record_all_grasps.py` (writes under `outputs/`, gitignored except for `outputs/images/`).
+
 ## Status
 
 | Task | What | Status |
@@ -11,8 +21,6 @@ This repository contains an end-to-end dexterous-grasping pipeline in MuJoCo. I 
 | 3 | 3D vision-based grasp prediction | ✅ Complete |
 | 4 | Planning and execution | ✅ Complete (4/5 objects successful) |
 | 5 | Demo video + evaluation | ✅ Complete — notes in `docs/task5_demo.md` |
-
-Regenerate the local quad-view MP4 for all five YCB objects with `record_all_grasps.py` (writes under `outputs/`, gitignored).
 
 ## Quickstart
 
@@ -87,6 +95,14 @@ dexterous_manipulation/
 `outputs/` is local-only (`.gitignore`); rerender or re-record with the scripts above when needed.
 
 ## What's in the combined robot
+
+![RUKA hand mount side view](outputs/images/Screenshot%20from%202026-05-02%2017-28-48.png)
+
+This side view highlights the adapter geometry between Piper `link6` and the RUKA palm.
+
+![RUKA hand mounted on Piper wrist](outputs/images/Screenshot%20from%202026-05-02%2019-51-24.png)
+
+This palm-side view shows the full five-finger hand placement after mounting.
 
 - **6 Piper arm joints** (revolute), ranges from the Menagerie MJCF I started from
 - **15 RUKA finger joints** (revolute, 3 per finger × 5 fingers)
